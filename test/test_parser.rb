@@ -63,6 +63,71 @@ class TestParser < Minitest::Test
     assert_equal today, result.date
   end
 
+  def test_parse_next_week
+    text = "team meeting next week"
+    # Find next Monday
+    days_until_monday = (1 - Date.today.wday) % 7
+    # If today is Monday, we want next Monday, not today
+    days_until_monday = 7 if days_until_monday == 0
+    next_monday = Date.today + days_until_monday
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "team meeting", result.text
+    assert_equal next_monday, result.date
+  end
+
+  def test_parse_next_month
+    text = "vacation next month"
+    # Get first day of next month
+    next_month = Date.today >> 1
+    next_month_first_day = Date.new(next_month.year, next_month.month, 1)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "vacation", result.text
+    assert_equal next_month_first_day, result.date
+  end
+
+  def test_parse_next_year
+    text = "conference next year"
+    # Get first day of next year
+    next_year_first_day = Date.new(Date.today.year + 1, 1, 1)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "conference", result.text
+    assert_equal next_year_first_day, result.date
+  end
+
+  def test_parse_this_weekend
+    text = "hiking this weekend"
+    # Calculate expected date (Saturday)
+    days_until_saturday = (6 - Date.today.wday) % 7
+    # If today is Saturday or Sunday, we're already on the weekend
+    days_until_saturday = 0 if days_until_saturday == 0 || days_until_saturday == 6
+    expected_date = Date.today + days_until_saturday
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "hiking", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_without_spaces
+    text = "exam nextweek"
+    # Find next Monday
+    days_until_monday = (1 - Date.today.wday) % 7
+    # If today is Monday, we want next Monday, not today
+    days_until_monday = 7 if days_until_monday == 0
+    next_monday = Date.today + days_until_monday
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "exam", result.text
+    assert_equal next_monday, result.date
+  end
+
   def test_raises_on_no_date_keyword
     text = "wash car"
     

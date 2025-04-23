@@ -41,9 +41,29 @@ puts result.date  # => <Date: 2023-03-31> (represents today's date)
 result = Hizuke.parse("call mom yesterday")
 puts result.text  # => "call mom"
 puts result.date  # => <Date: 2023-03-30> (represents yesterday's date)
+
+# Parse text with next week's date
+result = Hizuke.parse("team meeting next week")
+puts result.text  # => "team meeting"
+puts result.date  # => <Date: 2023-04-04> (represents the next Monday)
+
+# Parse text with next month's date
+result = Hizuke.parse("vacation next month")
+puts result.text  # => "vacation"
+puts result.date  # => <Date: 2023-05-01> (represents the first day of the next month)
+
+# Parse text with next year's date
+result = Hizuke.parse("conference next year")
+puts result.text  # => "conference"
+puts result.date  # => <Date: 2024-01-01> (represents the first day of the next year)
+
+# Parse text with this weekend's date
+result = Hizuke.parse("hiking this weekend")
+puts result.text  # => "hiking"
+puts result.date  # => <Date: 2023-04-01> (represents the next Saturday)
 ```
 
-The parser is case-insensitive and can handle date references located anywhere in the text.
+The parser is case-insensitive and can handle date references located anywhere in the text. It also supports date references with or without spaces (e.g., "nextweek" or "next week").
 
 ## Supported Date Keywords
 
@@ -52,6 +72,10 @@ Currently, the following English date keywords are supported:
 - `yesterday` - returns yesterday's date
 - `today` - returns today's date
 - `tomorrow` - returns tomorrow's date
+- `next week` / `nextweek` - returns the date of the next Monday
+- `next month` / `nextmonth` - returns the first day of the next month
+- `next year` / `nextyear` - returns the first day of the next year
+- `this weekend` / `thisweekend` - returns the date of the upcoming Saturday (or today if it's already the weekend)
 
 ## Development
 
