@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Juraj Maťaše"]
   spec.email = ["juraj@hey.com"]
 
-  spec.summary = "A simple date parser for text containing time references"
-  spec.description = "Parse dates from text containing keywords like 'yesterday', 'today', and 'tomorrow'"
+  spec.summary = "A simple date parser for natural language time references"
+  spec.description = "Hizuke is a lightweight utility that extracts dates from text by recognizing common time expressions. It cleans the original text and returns both the parsed date and the text without the date reference."
   spec.homepage = "https://github.com/majur/hizuke"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 2.6.0"
