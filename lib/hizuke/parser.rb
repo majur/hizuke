@@ -37,6 +37,8 @@ module Hizuke
       "day before yesterday" => -2,
       "nextweek" => :next_week,
       "next week" => :next_week,
+      "lastweek" => :last_week,
+      "last week" => :last_week,
       "nextmonth" => :next_month,
       "next month" => :next_month,
       "nextyear" => :next_year,
@@ -48,6 +50,8 @@ module Hizuke
     # Regex patterns for dynamic date references
     IN_X_DAYS_PATTERN = /in (\d+) days?/i
     X_DAYS_AGO_PATTERN = /(\d+) days? ago/i
+    IN_X_WEEKS_PATTERN = /in (\d+) weeks?/i
+    X_WEEKS_AGO_PATTERN = /(\d+) weeks? ago/i
     
     # Regex patterns for specific days of the week
     THIS_DAY_PATTERN = /this (monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i
@@ -192,6 +196,22 @@ module Hizuke
         return Result.new(clean_text, date)
       end
 
+      # Check for "in X weeks" pattern
+      if (match = text.match(IN_X_WEEKS_PATTERN))
+        weeks = match[1].to_i
+        date = Date.today + (weeks * 7)
+        clean_text = text.gsub(match[0], "").strip
+        return Result.new(clean_text, date)
+      end
+
+      # Check for "X weeks ago" pattern
+      if (match = text.match(X_WEEKS_AGO_PATTERN))
+        weeks = match[1].to_i
+        date = Date.today - (weeks * 7)
+        clean_text = text.gsub(match[0], "").strip
+        return Result.new(clean_text, date)
+      end
+
       nil
     end
 
@@ -256,6 +276,12 @@ module Hizuke
         # If today is Monday, we want next Monday, not today
         days_until_monday = 7 if days_until_monday == 0
         Date.today + days_until_monday
+      elsif date_value == :last_week
+        # Find last Monday
+        days_since_monday = (Date.today.wday - 1) % 7
+        # If today is Monday, we want last Monday, not today
+        days_since_monday = 7 if days_since_monday == 0
+        Date.today - days_since_monday - 7
       elsif date_value == :next_month
         # Return the first day of the next month
         next_month = Date.today >> 1

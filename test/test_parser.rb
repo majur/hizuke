@@ -297,4 +297,50 @@ class TestParser < Minitest::Test
     assert_equal "went shopping", result.text
     assert_equal expected_date, result.date
   end
+
+  def test_parse_last_week
+    text = "conference last week"
+    today = Date.today
+    days_since_monday = (today.wday - 1) % 7
+    days_since_monday = 7 if days_since_monday == 0
+    expected_date = today - days_since_monday - 7
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "conference", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_lastweek
+    text = "submitted report lastweek"
+    today = Date.today
+    days_since_monday = (today.wday - 1) % 7
+    days_since_monday = 7 if days_since_monday == 0
+    expected_date = today - days_since_monday - 7
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "submitted report", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_in_x_weeks
+    text = "conference in 3 weeks"
+    expected_date = Date.today + (3 * 7)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "conference", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_x_weeks_ago
+    text = "started project 2 weeks ago"
+    expected_date = Date.today - (2 * 7)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "started project", result.text
+    assert_equal expected_date, result.date
+  end
 end 
