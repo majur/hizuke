@@ -80,6 +80,8 @@ Currently, the following English date keywords are supported:
 - `X weeks ago` - returns the date X weeks before today (where X is any number)
 - `in X months` - returns the date X months from today (where X is any number)
 - `X months ago` - returns the date X months before today (where X is any number)
+- `in X years` - returns the date X years from today (where X is any number)
+- `X years ago` - returns the date X years before today (where X is any number)
 - `this Monday`, `this Tuesday`, etc. - returns the date of the specified day in the current week
 - `next Monday`, `next Tuesday`, etc. - returns the date of the specified day in the next week
 - `last Monday`, `last Tuesday`, etc. - returns the date of the specified day in the previous week
@@ -88,6 +90,7 @@ Currently, the following English date keywords are supported:
 - `next month` / `nextmonth` - returns the first day of the next month
 - `last month` / `lastmonth` - returns the first day of the previous month
 - `next year` / `nextyear` - returns the first day of the next year
+- `last year` / `lastyear` - returns the first day of the previous year
 - `this weekend` / `thisweekend` - returns the date of the upcoming Saturday (or today if it's already the weekend)
 
 ## Development

@@ -391,4 +391,44 @@ class TestParser < Minitest::Test
     assert_equal "started working", result.text
     assert_equal expected_date, result.date
   end
+
+  def test_parse_last_year
+    text = "graduated last year"
+    expected_date = Date.new(Date.today.year - 1, 1, 1)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "graduated", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_lastyear
+    text = "vacation lastyear"
+    expected_date = Date.new(Date.today.year - 1, 1, 1)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "vacation", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_in_x_years
+    text = "retirement in 10 years"
+    expected_date = Date.new(Date.today.year + 10, Date.today.month, Date.today.day)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "retirement", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_x_years_ago
+    text = "started university 4 years ago"
+    expected_date = Date.new(Date.today.year - 4, Date.today.month, Date.today.day)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "started university", result.text
+    assert_equal expected_date, result.date
+  end
 end 

@@ -45,6 +45,8 @@ module Hizuke
       "last month" => :last_month,
       "nextyear" => :next_year,
       "next year" => :next_year,
+      "lastyear" => :last_year,
+      "last year" => :last_year,
       "thisweekend" => :this_weekend,
       "this weekend" => :this_weekend
     }.freeze
@@ -56,6 +58,8 @@ module Hizuke
     X_WEEKS_AGO_PATTERN = /(\d+) weeks? ago/i
     IN_X_MONTHS_PATTERN = /in (\d+) months?/i
     X_MONTHS_AGO_PATTERN = /(\d+) months? ago/i
+    IN_X_YEARS_PATTERN = /in (\d+) years?/i
+    X_YEARS_AGO_PATTERN = /(\d+) years? ago/i
     
     # Regex patterns for specific days of the week
     THIS_DAY_PATTERN = /this (monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i
@@ -232,6 +236,22 @@ module Hizuke
         return Result.new(clean_text, date)
       end
 
+      # Check for "in X years" pattern
+      if (match = text.match(IN_X_YEARS_PATTERN))
+        years = match[1].to_i
+        date = Date.new(Date.today.year + years, Date.today.month, Date.today.day)
+        clean_text = text.gsub(match[0], "").strip
+        return Result.new(clean_text, date)
+      end
+
+      # Check for "X years ago" pattern
+      if (match = text.match(X_YEARS_AGO_PATTERN))
+        years = match[1].to_i
+        date = Date.new(Date.today.year - years, Date.today.month, Date.today.day)
+        clean_text = text.gsub(match[0], "").strip
+        return Result.new(clean_text, date)
+      end
+
       nil
     end
 
@@ -314,6 +334,10 @@ module Hizuke
         # Return the first day of the next year
         next_year = Date.today.year + 1
         Date.new(next_year, 1, 1)
+      elsif date_value == :last_year
+        # Return the first day of the last year
+        last_year = Date.today.year - 1
+        Date.new(last_year, 1, 1)
       elsif date_value == :this_weekend
         # Calculate days until Saturday
         days_until_saturday = (6 - Date.today.wday) % 7
