@@ -207,4 +207,94 @@ class TestParser < Minitest::Test
     assert_equal "submitted report", result.text
     assert_equal expected_date, result.date
   end
+
+  def test_parse_this_monday
+    text = "meeting this monday"
+    today = Date.today
+    target_day = 1 # Monday
+    days_diff = (target_day - today.wday) % 7
+    expected_date = days_diff == 0 ? today : today + days_diff
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "meeting", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_this_friday
+    text = "deadline this friday"
+    today = Date.today
+    target_day = 5 # Friday
+    days_diff = (target_day - today.wday) % 7
+    expected_date = days_diff == 0 ? today : today + days_diff
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "deadline", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_next_monday
+    text = "meeting next monday"
+    today = Date.today
+    target_day = 1 # Monday
+    days_until_target = (target_day - today.wday) % 7
+    if days_until_target == 0 || target_day < today.wday
+      days_until_target += 7
+    end
+    expected_date = today + days_until_target
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "meeting", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_next_sunday
+    text = "brunch next sunday"
+    today = Date.today
+    target_day = 0 # Sunday
+    days_until_target = (target_day - today.wday) % 7
+    if days_until_target == 0 || target_day < today.wday
+      days_until_target += 7
+    end
+    expected_date = today + days_until_target
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "brunch", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_last_wednesday
+    text = "sent email last wednesday"
+    today = Date.today
+    target_day = 3 # Wednesday
+    days_since_target = (today.wday - target_day) % 7
+    if days_since_target == 0 || target_day > today.wday
+      days_since_target += 7
+    end
+    expected_date = today - days_since_target
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "sent email", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_last_saturday
+    text = "went shopping last saturday"
+    today = Date.today
+    target_day = 6 # Saturday
+    days_since_target = (today.wday - target_day) % 7
+    if days_since_target == 0 || target_day > today.wday
+      days_since_target += 7
+    end
+    expected_date = today - days_since_target
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "went shopping", result.text
+    assert_equal expected_date, result.date
+  end
 end 

@@ -15,6 +15,17 @@ module Hizuke
 
   # Parser class responsible for extracting dates from text
   class Parser
+    # Mapping of day names to their wday values (0-6, Sunday is 0)
+    DAYS_OF_WEEK = {
+      "monday" => 1,
+      "tuesday" => 2,
+      "wednesday" => 3,
+      "thursday" => 4,
+      "friday" => 5,
+      "saturday" => 6,
+      "sunday" => 0
+    }.freeze
+
     # Date keywords mapping
     DATE_KEYWORDS = {
       "yesterday" => -1,
@@ -37,6 +48,11 @@ module Hizuke
     # Regex patterns for dynamic date references
     IN_X_DAYS_PATTERN = /in (\d+) days?/i
     X_DAYS_AGO_PATTERN = /(\d+) days? ago/i
+    
+    # Regex patterns for specific days of the week
+    THIS_DAY_PATTERN = /this (monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i
+    NEXT_DAY_PATTERN = /next (monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i
+    LAST_DAY_PATTERN = /last (monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i
 
     # Parse text containing time references and extract both
     # the clean text and the date.
@@ -59,6 +75,10 @@ module Hizuke
 
       # Check for dynamic patterns first (in X days, X days ago)
       result = check_dynamic_patterns(text)
+      return result if result
+
+      # Check for day of week patterns (this Monday, next Tuesday, etc.)
+      result = check_day_of_week_patterns(text)
       return result if result
 
       # Try to find compound date expressions (like "next week")
@@ -122,6 +142,38 @@ module Hizuke
 
     private
 
+    # Check for day of week patterns (this Monday, next Tuesday, last Friday, etc.)
+    def check_day_of_week_patterns(text)
+      # Check for "this [day]" pattern
+      if (match = text.match(THIS_DAY_PATTERN))
+        day_name = match[1].downcase
+        day_value = DAYS_OF_WEEK[day_name]
+        date = calculate_this_day(day_value)
+        clean_text = text.gsub(match[0], "").strip
+        return Result.new(clean_text, date)
+      end
+
+      # Check for "next [day]" pattern
+      if (match = text.match(NEXT_DAY_PATTERN))
+        day_name = match[1].downcase
+        day_value = DAYS_OF_WEEK[day_name]
+        date = calculate_next_day(day_value)
+        clean_text = text.gsub(match[0], "").strip
+        return Result.new(clean_text, date)
+      end
+
+      # Check for "last [day]" pattern
+      if (match = text.match(LAST_DAY_PATTERN))
+        day_name = match[1].downcase
+        day_value = DAYS_OF_WEEK[day_name]
+        date = calculate_last_day(day_value)
+        clean_text = text.gsub(match[0], "").strip
+        return Result.new(clean_text, date)
+      end
+
+      nil
+    end
+
     # Check for dynamic date patterns like "in X days" or "X days ago"
     def check_dynamic_patterns(text)
       # Check for "in X days" pattern
@@ -141,6 +193,57 @@ module Hizuke
       end
 
       nil
+    end
+
+    # Calculate date for "this [day]" - the current/upcoming day in this week
+    def calculate_this_day(target_wday)
+      today = Date.today
+      today_wday = today.wday
+      
+      # Calculate days until the target day in this week
+      days_diff = (target_wday - today_wday) % 7
+      
+      # If it's the same day, return today's date
+      if days_diff == 0
+        return today
+      end
+      
+      # Return the date of the next occurrence in this week
+      today + days_diff
+    end
+
+    # Calculate date for "next [day]" - the day in next week
+    def calculate_next_day(target_wday)
+      today = Date.today
+      today_wday = today.wday
+      
+      # Calculate days until the next occurrence
+      days_until_target = (target_wday - today_wday) % 7
+      
+      # If today is the target day or the target day is earlier in the week,
+      # we want the day next week, so add 7 days
+      if days_until_target == 0 || target_wday < today_wday
+        days_until_target += 7
+      end
+      
+      today + days_until_target
+    end
+
+    # Calculate date for "last [day]" - the day in previous week
+    def calculate_last_day(target_wday)
+      today = Date.today
+      today_wday = today.wday
+      
+      # Calculate days since the last occurrence
+      days_since_target = (today_wday - target_wday) % 7
+      
+      # If today is the target day or the target day is later in the week,
+      # we want the day last week, so add 7 days
+      if days_since_target == 0 || target_wday > today_wday
+        days_since_target += 7
+      end
+      
+      today - days_since_target
     end
 
     # Calculate the date based on the keyword value
