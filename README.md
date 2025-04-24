@@ -92,6 +92,13 @@ Currently, the following English date keywords are supported:
 - `next year` / `nextyear` - returns the first day of the next year
 - `last year` / `lastyear` - returns the first day of the previous year
 - `this weekend` / `thisweekend` - returns the date of the upcoming Saturday (or today if it's already the weekend)
+- `end of week` / `endofweek` - returns the date of the upcoming Sunday (end of week)
+- `end of month` / `endofmonth` - returns the date of the last day of the current month
+- `end of year` / `endofyear` - returns the date of December 31st of the current year
+- `mid week` / `midweek` - returns the date of Wednesday of the current week
+- `mid month` / `midmonth` - returns the date of the 15th day of the current month
+- `next quarter` / `nextquarter` - returns the first day of the next quarter
+- `last quarter` / `lastquarter` - returns the first day of the last quarter
 
 ## Development
 

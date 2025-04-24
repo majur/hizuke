@@ -431,4 +431,258 @@ class TestParser < Minitest::Test
     assert_equal "started university", result.text
     assert_equal expected_date, result.date
   end
+
+  def test_parse_end_of_week
+    text = "project deadline end of week"
+    # Calculate days until Sunday (end of week)
+    days_until_sunday = (0 - Date.today.wday) % 7
+    # If today is Sunday, we're already at the end of the week
+    days_until_sunday = 0 if days_until_sunday == 0
+    expected_date = Date.today + days_until_sunday
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "project deadline", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_endofweek
+    text = "report due endofweek"
+    # Calculate days until Sunday (end of week)
+    days_until_sunday = (0 - Date.today.wday) % 7
+    # If today is Sunday, we're already at the end of the week
+    days_until_sunday = 0 if days_until_sunday == 0
+    expected_date = Date.today + days_until_sunday
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "report due", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_end_of_month
+    text = "rent payment end of month"
+    # Get the first day of next month
+    next_month = Date.today >> 1
+    first_day_next_month = Date.new(next_month.year, next_month.month, 1)
+    # Subtract one day to get the last day of current month
+    expected_date = first_day_next_month - 1
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "rent payment", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_endofmonth
+    text = "salary endofmonth"
+    # Get the first day of next month
+    next_month = Date.today >> 1
+    first_day_next_month = Date.new(next_month.year, next_month.month, 1)
+    # Subtract one day to get the last day of current month
+    expected_date = first_day_next_month - 1
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "salary", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_end_of_year
+    text = "bonus payment end of year"
+    expected_date = Date.new(Date.today.year, 12, 31)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "bonus payment", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_endofyear
+    text = "tax filing endofyear"
+    expected_date = Date.new(Date.today.year, 12, 31)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "tax filing", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_mid_week
+    text = "team meeting mid week"
+    # Calculate days until/since Wednesday (3)
+    today_wday = Date.today.wday
+    target_wday = 3 # Wednesday
+    days_diff = (target_wday - today_wday) % 7
+    # If the difference is more than 3, then Wednesday has passed this week
+    # So we need to go back to Wednesday
+    days_diff = days_diff - 7 if days_diff > 3
+    expected_date = Date.today + days_diff
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "team meeting", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_midweek
+    text = "client call midweek"
+    # Calculate days until/since Wednesday (3)
+    today_wday = Date.today.wday
+    target_wday = 3 # Wednesday
+    days_diff = (target_wday - today_wday) % 7
+    # If the difference is more than 3, then Wednesday has passed this week
+    # So we need to go back to Wednesday
+    days_diff = days_diff - 7 if days_diff > 3
+    expected_date = Date.today + days_diff
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "client call", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_mid_month
+    text = "performance review mid month"
+    expected_date = Date.new(Date.today.year, Date.today.month, 15)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "performance review", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_midmonth
+    text = "budget planning midmonth"
+    expected_date = Date.new(Date.today.year, Date.today.month, 15)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "budget planning", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_next_quarter
+    text = "planning session next quarter"
+    
+    # Determine expected date for the next quarter
+    today = Date.today
+    current_month = today.month
+    
+    # Determine the start month of the next quarter
+    next_quarter_month = case
+                        when current_month <= 3
+                          4  # Q2 starts in April
+                        when current_month <= 6
+                          7  # Q3 starts in July
+                        when current_month <= 9
+                          10 # Q4 starts in October
+                        else
+                          1  # Q1 of next year starts in January
+                        end
+    
+    # If the next quarter is in the next year, increment the year
+    next_quarter_year = today.year
+    next_quarter_year += 1 if current_month > 9
+    
+    expected_date = Date.new(next_quarter_year, next_quarter_month, 1)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "planning session", result.text
+    assert_equal expected_date, result.date
+  end
+  
+  def test_parse_nextquarter
+    text = "budget review nextquarter"
+    
+    # Determine expected date for the next quarter
+    today = Date.today
+    current_month = today.month
+    
+    # Determine the start month of the next quarter
+    next_quarter_month = case
+                        when current_month <= 3
+                          4  # Q2 starts in April
+                        when current_month <= 6
+                          7  # Q3 starts in July
+                        when current_month <= 9
+                          10 # Q4 starts in October
+                        else
+                          1  # Q1 of next year starts in January
+                        end
+    
+    # If the next quarter is in the next year, increment the year
+    next_quarter_year = today.year
+    next_quarter_year += 1 if current_month > 9
+    
+    expected_date = Date.new(next_quarter_year, next_quarter_month, 1)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "budget review", result.text
+    assert_equal expected_date, result.date
+  end
+  
+  def test_parse_last_quarter
+    text = "performance analysis last quarter"
+    
+    # Determine expected date for the last quarter
+    today = Date.today
+    current_month = today.month
+    
+    # Determine the start month of the last quarter
+    last_quarter_month = case
+                        when current_month <= 3
+                          10 # Q4 of last year starts in October
+                        when current_month <= 6
+                          1  # Q1 starts in January
+                        when current_month <= 9
+                          4  # Q2 starts in April
+                        else
+                          7  # Q3 starts in July
+                        end
+    
+    # If the last quarter is in the previous year, decrement the year
+    last_quarter_year = today.year
+    last_quarter_year -= 1 if current_month <= 3
+    
+    expected_date = Date.new(last_quarter_year, last_quarter_month, 1)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "performance analysis", result.text
+    assert_equal expected_date, result.date
+  end
+  
+  def test_parse_lastquarter
+    text = "financial report lastquarter"
+    
+    # Determine expected date for the last quarter
+    today = Date.today
+    current_month = today.month
+    
+    # Determine the start month of the last quarter
+    last_quarter_month = case
+                        when current_month <= 3
+                          10 # Q4 of last year starts in October
+                        when current_month <= 6
+                          1  # Q1 starts in January
+                        when current_month <= 9
+                          4  # Q2 starts in April
+                        else
+                          7  # Q3 starts in July
+                        end
+    
+    # If the last quarter is in the previous year, decrement the year
+    last_quarter_year = today.year
+    last_quarter_year -= 1 if current_month <= 3
+    
+    expected_date = Date.new(last_quarter_year, last_quarter_month, 1)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "financial report", result.text
+    assert_equal expected_date, result.date
+  end
 end 

@@ -47,8 +47,22 @@ module Hizuke
       "next year" => :next_year,
       "lastyear" => :last_year,
       "last year" => :last_year,
+      "nextquarter" => :next_quarter,
+      "next quarter" => :next_quarter,
+      "lastquarter" => :last_quarter,
+      "last quarter" => :last_quarter,
       "thisweekend" => :this_weekend,
-      "this weekend" => :this_weekend
+      "this weekend" => :this_weekend,
+      "endofweek" => :end_of_week,
+      "end of week" => :end_of_week,
+      "endofmonth" => :end_of_month,
+      "end of month" => :end_of_month,
+      "endofyear" => :end_of_year,
+      "end of year" => :end_of_year,
+      "midweek" => :mid_week,
+      "mid week" => :mid_week,
+      "midmonth" => :mid_month,
+      "mid month" => :mid_month
     }.freeze
 
     # Regex patterns for dynamic date references
@@ -338,12 +352,85 @@ module Hizuke
         # Return the first day of the last year
         last_year = Date.today.year - 1
         Date.new(last_year, 1, 1)
+      elsif date_value == :next_quarter
+        # Return the first day of the next quarter
+        today = Date.today
+        current_month = today.month
+        
+        # Determine the start month of the next quarter
+        next_quarter_month = case
+                             when current_month <= 3
+                               4  # Q2 starts in April
+                             when current_month <= 6
+                               7  # Q3 starts in July
+                             when current_month <= 9
+                               10 # Q4 starts in October
+                             else
+                               1  # Q1 of next year starts in January
+                             end
+        
+        # If the next quarter is in the next year, increment the year
+        next_quarter_year = today.year
+        next_quarter_year += 1 if current_month > 9
+        
+        Date.new(next_quarter_year, next_quarter_month, 1)
+      elsif date_value == :last_quarter
+        # Return the first day of the last quarter
+        today = Date.today
+        current_month = today.month
+        
+        # Determine the start month of the last quarter
+        last_quarter_month = case
+                             when current_month <= 3
+                               10 # Q4 of last year starts in October
+                             when current_month <= 6
+                               1  # Q1 starts in January
+                             when current_month <= 9
+                               4  # Q2 starts in April
+                             else
+                               7  # Q3 starts in July
+                             end
+        
+        # If the last quarter is in the previous year, decrement the year
+        last_quarter_year = today.year
+        last_quarter_year -= 1 if current_month <= 3
+        
+        Date.new(last_quarter_year, last_quarter_month, 1)
       elsif date_value == :this_weekend
         # Calculate days until Saturday
         days_until_saturday = (6 - Date.today.wday) % 7
         # If today is Saturday or Sunday, we're already on the weekend
         days_until_saturday = 0 if days_until_saturday == 0 || days_until_saturday == 6
         Date.today + days_until_saturday
+      elsif date_value == :end_of_week
+        # Calculate days until Sunday (end of week)
+        days_until_sunday = (0 - Date.today.wday) % 7
+        # If today is Sunday, we're already at the end of the week
+        days_until_sunday = 0 if days_until_sunday == 0
+        Date.today + days_until_sunday
+      elsif date_value == :end_of_month
+        # Return the last day of the current month
+        # Get the first day of next month
+        next_month = Date.today >> 1
+        first_day_next_month = Date.new(next_month.year, next_month.month, 1)
+        # Subtract one day to get the last day of current month
+        first_day_next_month - 1
+      elsif date_value == :end_of_year
+        # Return the last day of the current year (December 31)
+        Date.new(Date.today.year, 12, 31)
+      elsif date_value == :mid_week
+        # Return Wednesday of the current week
+        # Calculate days until/since Wednesday (3)
+        today_wday = Date.today.wday
+        target_wday = 3 # Wednesday
+        days_diff = (target_wday - today_wday) % 7
+        # If the difference is more than 3, then Wednesday has passed this week
+        # So we need to go back to Wednesday
+        days_diff = days_diff - 7 if days_diff > 3
+        Date.today + days_diff
+      elsif date_value == :mid_month
+        # Return the 15th day of the current month
+        Date.new(Date.today.year, Date.today.month, 15)
       end
     end
   end
