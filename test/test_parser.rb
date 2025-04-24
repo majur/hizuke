@@ -343,4 +343,52 @@ class TestParser < Minitest::Test
     assert_equal "started project", result.text
     assert_equal expected_date, result.date
   end
+
+  def test_parse_last_month
+    text = "paid rent last month"
+    today = Date.today
+    prev_month = today << 1
+    expected_date = Date.new(prev_month.year, prev_month.month, 1)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "paid rent", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_lastmonth
+    text = "vacation lastmonth"
+    today = Date.today
+    prev_month = today << 1
+    expected_date = Date.new(prev_month.year, prev_month.month, 1)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "vacation", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_in_x_months
+    text = "conference in 3 months"
+    today = Date.today
+    future_date = today >> 3
+    expected_date = future_date
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "conference", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_x_months_ago
+    text = "started working 6 months ago"
+    today = Date.today
+    past_date = today << 6
+    expected_date = past_date
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "started working", result.text
+    assert_equal expected_date, result.date
+  end
 end 

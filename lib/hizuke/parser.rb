@@ -41,6 +41,8 @@ module Hizuke
       "last week" => :last_week,
       "nextmonth" => :next_month,
       "next month" => :next_month,
+      "lastmonth" => :last_month,
+      "last month" => :last_month,
       "nextyear" => :next_year,
       "next year" => :next_year,
       "thisweekend" => :this_weekend,
@@ -52,6 +54,8 @@ module Hizuke
     X_DAYS_AGO_PATTERN = /(\d+) days? ago/i
     IN_X_WEEKS_PATTERN = /in (\d+) weeks?/i
     X_WEEKS_AGO_PATTERN = /(\d+) weeks? ago/i
+    IN_X_MONTHS_PATTERN = /in (\d+) months?/i
+    X_MONTHS_AGO_PATTERN = /(\d+) months? ago/i
     
     # Regex patterns for specific days of the week
     THIS_DAY_PATTERN = /this (monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i
@@ -212,6 +216,22 @@ module Hizuke
         return Result.new(clean_text, date)
       end
 
+      # Check for "in X months" pattern
+      if (match = text.match(IN_X_MONTHS_PATTERN))
+        months = match[1].to_i
+        date = Date.today >> months
+        clean_text = text.gsub(match[0], "").strip
+        return Result.new(clean_text, date)
+      end
+
+      # Check for "X months ago" pattern
+      if (match = text.match(X_MONTHS_AGO_PATTERN))
+        months = match[1].to_i
+        date = Date.today << months
+        clean_text = text.gsub(match[0], "").strip
+        return Result.new(clean_text, date)
+      end
+
       nil
     end
 
@@ -286,6 +306,10 @@ module Hizuke
         # Return the first day of the next month
         next_month = Date.today >> 1
         Date.new(next_month.year, next_month.month, 1)
+      elsif date_value == :last_month
+        # Return the first day of the previous month
+        prev_month = Date.today << 1
+        Date.new(prev_month.year, prev_month.month, 1)
       elsif date_value == :next_year
         # Return the first day of the next year
         next_year = Date.today.year + 1
