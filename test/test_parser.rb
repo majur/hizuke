@@ -147,4 +147,64 @@ class TestParser < Minitest::Test
       Hizuke::Parser.parse(nil)
     end
   end
+
+  def test_parse_day_after_tomorrow
+    text = "meeting day after tomorrow"
+    day_after_tomorrow = Date.today + 2
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "meeting", result.text
+    assert_equal day_after_tomorrow, result.date
+  end
+
+  def test_parse_dayaftertomorrow
+    text = "dentist appointment dayaftertomorrow"
+    day_after_tomorrow = Date.today + 2
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "dentist appointment", result.text
+    assert_equal day_after_tomorrow, result.date
+  end
+
+  def test_parse_day_before_yesterday
+    text = "call mom day before yesterday"
+    day_before_yesterday = Date.today - 2
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "call mom", result.text
+    assert_equal day_before_yesterday, result.date
+  end
+
+  def test_parse_daybeforeyesterday
+    text = "received package daybeforeyesterday"
+    day_before_yesterday = Date.today - 2
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "received package", result.text
+    assert_equal day_before_yesterday, result.date
+  end
+
+  def test_parse_in_x_days
+    text = "exam in 5 days"
+    expected_date = Date.today + 5
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "exam", result.text
+    assert_equal expected_date, result.date
+  end
+
+  def test_parse_x_days_ago
+    text = "submitted report 3 days ago"
+    expected_date = Date.today - 3
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "submitted report", result.text
+    assert_equal expected_date, result.date
+  end
 end 

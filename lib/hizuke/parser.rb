@@ -20,6 +20,10 @@ module Hizuke
       "yesterday" => -1,
       "today" => 0,
       "tomorrow" => 1,
+      "dayaftertomorrow" => 2,
+      "day after tomorrow" => 2,
+      "daybeforeyesterday" => -2,
+      "day before yesterday" => -2,
       "nextweek" => :next_week,
       "next week" => :next_week,
       "nextmonth" => :next_month,
@@ -29,6 +33,10 @@ module Hizuke
       "thisweekend" => :this_weekend,
       "this weekend" => :this_weekend
     }.freeze
+
+    # Regex patterns for dynamic date references
+    IN_X_DAYS_PATTERN = /in (\d+) days?/i
+    X_DAYS_AGO_PATTERN = /(\d+) days? ago/i
 
     # Parse text containing time references and extract both
     # the clean text and the date.
@@ -48,6 +56,10 @@ module Hizuke
     def parse(text)
       # Check if text is nil or empty
       raise ParseError, "Input text cannot be nil or empty" if text.nil? || text.empty?
+
+      # Check for dynamic patterns first (in X days, X days ago)
+      result = check_dynamic_patterns(text)
+      return result if result
 
       # Try to find compound date expressions (like "next week")
       compound_matches = {}
@@ -109,6 +121,27 @@ module Hizuke
     end
 
     private
+
+    # Check for dynamic date patterns like "in X days" or "X days ago"
+    def check_dynamic_patterns(text)
+      # Check for "in X days" pattern
+      if (match = text.match(IN_X_DAYS_PATTERN))
+        days = match[1].to_i
+        date = Date.today + days
+        clean_text = text.gsub(match[0], "").strip
+        return Result.new(clean_text, date)
+      end
+
+      # Check for "X days ago" pattern
+      if (match = text.match(X_DAYS_AGO_PATTERN))
+        days = match[1].to_i
+        date = Date.today - days
+        clean_text = text.gsub(match[0], "").strip
+        return Result.new(clean_text, date)
+      end
+
+      nil
+    end
 
     # Calculate the date based on the keyword value
     def calculate_date(date_value)
