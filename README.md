@@ -72,10 +72,33 @@ Currently, the following English date keywords are supported:
 - `yesterday` - returns yesterday's date
 - `today` - returns today's date
 - `tomorrow` - returns tomorrow's date
+- `day after tomorrow` / `dayaftertomorrow` - returns the date two days from today
+- `day before yesterday` / `daybeforeyesterday` - returns the date two days before today
+- `in X days` - returns the date X days from today (where X is any number)
+- `X days ago` - returns the date X days before today (where X is any number)
+- `in X weeks` - returns the date X weeks from today (where X is any number)
+- `X weeks ago` - returns the date X weeks before today (where X is any number)
+- `in X months` - returns the date X months from today (where X is any number)
+- `X months ago` - returns the date X months before today (where X is any number)
+- `in X years` - returns the date X years from today (where X is any number)
+- `X years ago` - returns the date X years before today (where X is any number)
+- `this Monday`, `this Tuesday`, etc. - returns the date of the specified day in the current week
+- `next Monday`, `next Tuesday`, etc. - returns the date of the specified day in the next week
+- `last Monday`, `last Tuesday`, etc. - returns the date of the specified day in the previous week
 - `next week` / `nextweek` - returns the date of the next Monday
+- `last week` / `lastweek` - returns the date of the previous Monday
 - `next month` / `nextmonth` - returns the first day of the next month
+- `last month` / `lastmonth` - returns the first day of the previous month
 - `next year` / `nextyear` - returns the first day of the next year
+- `last year` / `lastyear` - returns the first day of the previous year
 - `this weekend` / `thisweekend` - returns the date of the upcoming Saturday (or today if it's already the weekend)
+- `end of week` / `endofweek` - returns the date of the upcoming Sunday (end of week)
+- `end of month` / `endofmonth` - returns the date of the last day of the current month
+- `end of year` / `endofyear` - returns the date of December 31st of the current year
+- `mid week` / `midweek` - returns the date of Wednesday of the current week
+- `mid month` / `midmonth` - returns the date of the 15th day of the current month
+- `next quarter` / `nextquarter` - returns the first day of the next quarter
+- `last quarter` / `lastquarter` - returns the first day of the last quarter
 
 ## Development
 
