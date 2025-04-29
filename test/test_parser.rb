@@ -685,4 +685,239 @@ class TestParser < Minitest::Test
     assert_equal "financial report", result.text
     assert_equal expected_date, result.date
   end
+
+  # Tests for time parsing
+  def test_parse_with_time
+    text = "meeting tomorrow at 10"
+    tomorrow = Date.today + 1
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "meeting", result.text
+    assert_equal tomorrow, result.date
+    assert_equal 10, result.time.hour
+    assert_equal 0, result.time.min
+    assert_equal "10:00", result.time.to_s
+  end
+  
+  def test_parse_with_time_am
+    text = "call doctor tomorrow at 9am"
+    tomorrow = Date.today + 1
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "call doctor", result.text
+    assert_equal tomorrow, result.date
+    assert_equal 9, result.time.hour
+    assert_equal 0, result.time.min
+    assert_equal "09:00", result.time.to_s
+  end
+  
+  def test_parse_with_time_pm
+    text = "dinner today at 7pm"
+    today = Date.today
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "dinner", result.text
+    assert_equal today, result.date
+    assert_equal 19, result.time.hour
+    assert_equal 0, result.time.min
+    assert_equal "19:00", result.time.to_s
+  end
+  
+  def test_parse_with_time_minutes
+    text = "meeting tomorrow at 10:30"
+    tomorrow = Date.today + 1
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "meeting", result.text
+    assert_equal tomorrow, result.date
+    assert_equal 10, result.time.hour
+    assert_equal 30, result.time.min
+    assert_equal "10:30", result.time.to_s
+  end
+  
+  def test_parse_with_time_hours_minutes_seconds
+    text = "start recording today at 14:30:45"
+    today = Date.today
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "start recording", result.text
+    assert_equal today, result.date
+    assert_equal 14, result.time.hour
+    assert_equal 30, result.time.min
+    assert_equal 45, result.time.sec
+    assert_equal "14:30:45", result.time.to_s
+  end
+  
+  def test_parse_with_at_symbol
+    text = "meeting tomorrow @ 10"
+    tomorrow = Date.today + 1
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "meeting", result.text
+    assert_equal tomorrow, result.date
+    assert_equal 10, result.time.hour
+    assert_equal 0, result.time.min
+    assert_equal "10:00", result.time.to_s
+  end
+  
+  def test_time_with_noon_pm
+    text = "lunch meeting tomorrow at 12pm"
+    tomorrow = Date.today + 1
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "lunch meeting", result.text
+    assert_equal tomorrow, result.date
+    assert_equal 12, result.time.hour
+    assert_equal 0, result.time.min
+    assert_equal "12:00", result.time.to_s
+  end
+  
+  def test_time_with_midnight_am
+    text = "airport pickup today at 12am"
+    today = Date.today
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "airport pickup", result.text
+    assert_equal today, result.date
+    assert_equal 0, result.time.hour
+    assert_equal 0, result.time.min
+    assert_equal "00:00", result.time.to_s
+  end
+  
+  def test_datetime_method
+    text = "meeting tomorrow at 10:30"
+    tomorrow = Date.today + 1
+    expected_datetime = Time.new(tomorrow.year, tomorrow.month, tomorrow.day, 10, 30, 0)
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "meeting", result.text
+    assert_equal tomorrow, result.date
+    assert_equal expected_datetime.year, result.datetime.year
+    assert_equal expected_datetime.month, result.datetime.month
+    assert_equal expected_datetime.day, result.datetime.day
+    assert_equal expected_datetime.hour, result.datetime.hour
+    assert_equal expected_datetime.min, result.datetime.min
+  end
+  
+  def test_datetime_with_no_time_returns_nil
+    text = "meeting tomorrow"
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_nil result.datetime
+  end
+
+  # Tests for word-based time parsing
+  def test_parse_with_noon
+    text = "meeting tomorrow at noon"
+    tomorrow = Date.today + 1
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "meeting", result.text
+    assert_equal tomorrow, result.date
+    assert_equal 12, result.time.hour
+    assert_equal 0, result.time.min
+    assert_equal "12:00", result.time.to_s
+  end
+  
+  def test_parse_with_midnight
+    text = "flight today at midnight"
+    today = Date.today
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "flight", result.text
+    assert_equal today, result.date
+    assert_equal 0, result.time.hour
+    assert_equal 0, result.time.min
+    assert_equal "00:00", result.time.to_s
+  end
+  
+  def test_parse_with_morning
+    text = "team meeting tomorrow in the morning"
+    tomorrow = Date.today + 1
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "team meeting", result.text
+    assert_equal tomorrow, result.date
+    assert_equal 8, result.time.hour
+    assert_equal 0, result.time.min
+    assert_equal "08:00", result.time.to_s
+  end
+  
+  def test_parse_with_evening
+    text = "dinner today in the evening"
+    today = Date.today
+    
+    result = Hizuke::Parser.parse(text)
+    
+    assert_equal "dinner", result.text
+    assert_equal today, result.date
+    assert_equal 20, result.time.hour
+    assert_equal 0, result.time.min
+    assert_equal "20:00", result.time.to_s
+  end
+  
+  def test_configure_morning_time
+    original_config = Hizuke.configuration.morning_time
+    
+    begin
+      Hizuke.configure do |config|
+        config.morning_time = { hour: 9, min: 30 }
+      end
+      
+      text = "breakfast tomorrow in the morning"
+      tomorrow = Date.today + 1
+      
+      result = Hizuke::Parser.parse(text)
+      
+      assert_equal "breakfast", result.text
+      assert_equal tomorrow, result.date
+      assert_equal 9, result.time.hour
+      assert_equal 30, result.time.min
+      assert_equal "09:30", result.time.to_s
+    ensure
+      # Restore the original configuration
+      Hizuke.configure do |config|
+        config.morning_time = original_config
+      end
+    end
+  end
+  
+  def test_configure_evening_time
+    original_config = Hizuke.configuration.evening_time
+    
+    begin
+      Hizuke.configure do |config|
+        config.evening_time = { hour: 19, min: 0 }
+      end
+      
+      text = "dinner today in the evening"
+      today = Date.today
+      
+      result = Hizuke::Parser.parse(text)
+      
+      assert_equal "dinner", result.text
+      assert_equal today, result.date
+      assert_equal 19, result.time.hour
+      assert_equal 0, result.time.min
+      assert_equal "19:00", result.time.to_s
+    ensure
+      # Restore the original configuration
+      Hizuke.configure do |config|
+        config.evening_time = original_config
+      end
+    end
+  end
 end 

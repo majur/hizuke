@@ -1,16 +1,70 @@
 # frozen_string_literal: true
 
 require "date"
+require "time"
 
 module Hizuke
-  # Result object containing the clean text and extracted date
+  # Simple class to represent a time of day without a date
+  class TimeOfDay
+    attr_reader :hour, :min, :sec
+    
+    def initialize(hour, min = 0, sec = 0)
+      @hour = hour
+      @min = min
+      @sec = sec
+    end
+    
+    def to_s
+      if sec == 0
+        format("%02d:%02d", hour, min)
+      else
+        format("%02d:%02d:%02d", hour, min, sec)
+      end
+    end
+    
+    def inspect
+      to_s
+    end
+  end
+  
+  # Result object containing the clean text and extracted date/time
   class Result
-    attr_reader :text, :date
+    attr_reader :text, :date, :time
 
-    def initialize(text, date)
+    def initialize(text, date, time = nil)
       @text = text
       @date = date
+      @time = time
     end
+
+    def datetime
+      return nil unless @time
+      
+      # Combine date and time into a Time object
+      Time.new(@date.year, @date.month, @date.day, 
+              @time.hour, @time.min, @time.sec)
+    end
+  end
+  
+  # Configuration class for Hizuke
+  class Configuration
+    attr_accessor :morning_time, :evening_time
+    
+    def initialize
+      @morning_time = { hour: 8, min: 0 }
+      @evening_time = { hour: 20, min: 0 }
+    end
+  end
+  
+  # Allows configuration of Hizuke
+  def self.configure
+    @configuration ||= Configuration.new
+    yield(@configuration) if block_given?
+  end
+  
+  # Returns the configuration
+  def self.configuration
+    @configuration ||= Configuration.new
   end
 
   # Parser class responsible for extracting dates from text
@@ -80,6 +134,15 @@ module Hizuke
     NEXT_DAY_PATTERN = /next (monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i
     LAST_DAY_PATTERN = /last (monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i
 
+    # Regex patterns for time references
+    TIME_PATTERN = /(?:at|@)\s*(\d{1,2})(?::(\d{1,2}))?(?::(\d{1,2}))?\s*(am|pm)?/i
+    
+    # Regex patterns for word-based time references
+    NOON_PATTERN = /at\s+noon/i
+    MIDNIGHT_PATTERN = /at\s+midnight/i
+    MORNING_PATTERN = /in\s+the\s+morning/i
+    EVENING_PATTERN = /in\s+the\s+evening/i
+    
     # Parse text containing time references and extract both
     # the clean text and the date.
     #
@@ -99,20 +162,62 @@ module Hizuke
       # Check if text is nil or empty
       raise ParseError, "Input text cannot be nil or empty" if text.nil? || text.empty?
 
+      # Extract time if present
+      extracted_time = nil
+      clean_text = text
+
+      # Try to match word-based time patterns first
+      if match = clean_text.match(NOON_PATTERN)
+        extracted_time = TimeOfDay.new(12, 0, 0)
+        clean_text = clean_text.gsub(match[0], "").strip
+      elsif match = clean_text.match(MIDNIGHT_PATTERN)
+        extracted_time = TimeOfDay.new(0, 0, 0)
+        clean_text = clean_text.gsub(match[0], "").strip
+      elsif match = clean_text.match(MORNING_PATTERN)
+        config = Hizuke.configuration
+        extracted_time = TimeOfDay.new(config.morning_time[:hour], config.morning_time[:min], 0)
+        clean_text = clean_text.gsub(match[0], "").strip
+      elsif match = clean_text.match(EVENING_PATTERN)
+        config = Hizuke.configuration
+        extracted_time = TimeOfDay.new(config.evening_time[:hour], config.evening_time[:min], 0)
+        clean_text = clean_text.gsub(match[0], "").strip
+      # Then try the numeric time pattern
+      elsif time_match = clean_text.match(TIME_PATTERN)
+        hour = time_match[1].to_i
+        min = time_match[2] ? time_match[2].to_i : 0
+        sec = time_match[3] ? time_match[3].to_i : 0
+        
+        # Adjust for AM/PM
+        if time_match[4]&.downcase == "pm" && hour < 12
+          hour += 12
+        elsif time_match[4]&.downcase == "am" && hour == 12
+          hour = 0
+        end
+        
+        extracted_time = TimeOfDay.new(hour, min, sec)
+        
+        # Remove the time expression from the text
+        clean_text = clean_text.gsub(time_match[0], "").strip
+      end
+
       # Check for dynamic patterns first (in X days, X days ago)
-      result = check_dynamic_patterns(text)
-      return result if result
+      result = check_dynamic_patterns(clean_text)
+      if result
+        return Result.new(result.text, result.date, extracted_time)
+      end
 
       # Check for day of week patterns (this Monday, next Tuesday, etc.)
-      result = check_day_of_week_patterns(text)
-      return result if result
+      result = check_day_of_week_patterns(clean_text)
+      if result
+        return Result.new(result.text, result.date, extracted_time)
+      end
 
       # Try to find compound date expressions (like "next week")
       compound_matches = {}
       
       DATE_KEYWORDS.keys.select { |k| k.include?(" ") }.each do |compound_key|
-        if text.downcase.include?(compound_key)
-          start_idx = text.downcase.index(compound_key)
+        if clean_text.downcase.include?(compound_key)
+          start_idx = clean_text.downcase.index(compound_key)
           end_idx = start_idx + compound_key.length - 1
           compound_matches[compound_key] = [start_idx, end_idx]
         end
@@ -128,15 +233,15 @@ module Hizuke
         date = calculate_date(date_value)
         
         # Remove the date expression from the text
-        clean_text = text.dup
-        clean_text.slice!(indices[0]..indices[1])
-        clean_text = clean_text.strip
+        final_text = clean_text.dup
+        final_text.slice!(indices[0]..indices[1])
+        final_text = final_text.strip
         
-        return Result.new(clean_text, date)
+        return Result.new(final_text, date, extracted_time)
       end
 
       # Split the text into words (for single-word date references)
-      words = text.split
+      words = clean_text.split
 
       # Find the first date keyword
       date_word_index = nil
@@ -152,7 +257,7 @@ module Hizuke
       end
 
       if date_word_index.nil?
-        raise ParseError, "No valid date reference found in '#{text}'"
+        raise ParseError, "No valid date reference found in '#{clean_text}'"
       end
 
       # Calculate the date based on the keyword
@@ -161,9 +266,9 @@ module Hizuke
       # Create the clean text by removing the date keyword
       clean_words = words.dup
       clean_words.delete_at(date_word_index)
-      clean_text = clean_words.join(" ").strip
+      final_text = clean_words.join(" ").strip
 
-      Result.new(clean_text, date)
+      Result.new(final_text, date, extracted_time)
     end
 
     private

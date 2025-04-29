@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2023-06-15
+
+### Added
+- Support for time recognition in text:
+  - "at X" format (e.g., "at 10" for 10:00)
+  - "@ X" alternative syntax
+  - Time with minutes "at X:Y" (e.g., "at 10:30")
+  - Time with seconds "at X:Y:Z" (e.g., "at 10:30:45")
+  - AM/PM format "at Xam/pm" (e.g., "at 10am", "at 7pm")
+- New attributes in Result class:
+  - `time` attribute to access the extracted time
+  - `datetime` method to get a combined Time object of date and time
+- Created a dedicated `TimeOfDay` class for better time handling with cleaner display
+- Support for word-based time expressions:
+  - "at noon" - returns 12:00
+  - "at midnight" - returns 00:00
+  - "in the morning" - returns configurable time (default 08:00)
+  - "in the evening" - returns configurable time (default 20:00)
+- Configuration system to customize times for "morning" and "evening"
+- Comprehensive tests for time parsing functionality
+- Updated documentation with time parsing examples and supported formats
+
 ## [0.0.3] - 2023-05-09
 
 ### Added
