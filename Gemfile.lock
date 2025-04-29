@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    hizuke (0.0.2)
+    hizuke (0.0.4)
 
 GEM
   remote: https://rubygems.org/
