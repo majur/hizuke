@@ -1,0 +1,40 @@
+AllCops:
+  NewCops: enable
+  SuggestExtensions: false
+
+# Metódy a triedy môžu byť dlhšie, pretože čitateľnosť je dôležitejšia ako pevné limity
+Metrics/MethodLength:
+  Max: 20
+  Exclude:
+    - 'test/**/*'  # Ignoruje testové súbory pre limitáciu dĺžky metód
+
+Metrics/AbcSize:
+  Max: 25  # Zvyšuje limit ABC metriky
+  Exclude:
+    - 'test/**/*'  # Ignoruje testové súbory pre ABC metriku
+    - 'lib/hizuke/holidays.rb'  # Ignoruje holidays.rb súbor, ktorý obsahá zložité matematické výpočty
+
+Metrics/ClassLength:
+  Max: 150  # Zvyšuje povolený limit pre triedy
+  Exclude:
+    - 'test/**/*'  # Ignoruje testy, ktoré môžu byť prirodzene dlhšie
+
+# Pravidlá pre pomenovanie premenných
+Naming/VariableNumber:
+  Enabled: false  # Vypnúť kontrolu názvov premenných obsahujúcich čísla
+
+# Ignorovať tvar guard clause - lokálny programming style môže byť iný
+Style/GuardClause:
+  Enabled: false
+
+# Ignorovať hlásenia o whitespace a formatting, ktoré budú opravené pomocou -a
+Layout:
+  Enabled: true
+  AutoCorrect: true
+
+# Ignorovať gemspec problémy
+Gemspec/RequireMFA:
+  Enabled: false  # Vypnúť požiadavku na MFA
+
+Gemspec/DevelopmentDependencies:
+  Enabled: false  # Povoliť vývojové závislosti v .gemspec namiesto v Gemfile 

@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
 require_relative 'hizuke/version'
+require_relative 'hizuke/constants'
+require_relative 'hizuke/date_calculator'
+require_relative 'hizuke/holidays'
+require_relative 'hizuke/holiday_matcher'
+require_relative 'hizuke/pattern_matcher'
 require_relative 'hizuke/parser'
 
 # Hizuke is a simple date parser that extracts dates from tex

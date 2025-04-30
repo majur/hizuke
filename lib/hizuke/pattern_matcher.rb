@@ -479,12 +479,40 @@ module Hizuke
     end
   end
 
-  # Main module for pattern matching in text
+  # Module for handling pattern matching
   module PatternMatcher
-    include Constants
     include TimePatternMatcher
     include DayOfWeekPatternMatcher
     include DynamicPatternMatcher
     include DateKeywordMatcher
+    include HolidayMatcher
+
+    # Try different parsing strategies to find a date in the text
+    # @param text [String] the text to parse
+    # @return [Hizuke::Result] the result with date and clean text
+    def try_parsing_strategies(clean_text)
+      # Check for holiday patterns first
+      result = check_holiday_patterns(clean_text)
+      return result if result
+
+      # Then check for dynamic patterns (in X days, X days ago)
+      result = check_dynamic_patterns(clean_text)
+      return result if result
+
+      # Then check day of week patterns (this Monday, next Tuesday, last Friday)
+      result = check_day_of_week_patterns(clean_text)
+      return result if result
+
+      # Then check compound date expressions (day after tomorrow, end of month)
+      result = check_compound_date_expressions(clean_text)
+      return result if result
+
+      # Finally try single words (today, tomorrow, yesterday)
+      result = check_single_word_date_references(clean_text)
+      return result if result
+
+      # Default to today if no explicit date reference is found
+      Result.new(clean_text, Date.today)
+    end
   end
 end

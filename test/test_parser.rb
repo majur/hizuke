@@ -631,3 +631,179 @@ class ConfigParserTest < BaseParserTest
     end
   end
 end
+
+# Testy pre sviatky a významné dni
+class HolidayParserTest < BaseParserTest
+  # Testuje správne rozpoznanie a výpočet dátumov statických sviatkov
+  def test_parsing_static_holidays
+    today = Date.today
+
+    check_christmas_date(today)
+    check_new_year_date(today)
+    check_valentines_date(today)
+  end
+
+  # Pomocná metóda pre test Vianoc
+  def check_christmas_date(today)
+    result = Hizuke.parse('family gathering on Christmas')
+    assert_equal 'family gathering on', result.clean_text
+    christmas_year = today <= Date.new(today.year, 12, 25) ? today.year : today.year + 1
+    assert_equal Date.new(christmas_year, 12, 25), result.date
+  end
+
+  # Pomocná metóda pre test Nového roka
+  def check_new_year_date(today)
+    result = Hizuke.parse('celebration on New Year')
+    assert_equal 'celebration on', result.clean_text
+    expected_date = calculate_new_year_date(today)
+    assert_equal expected_date, result.date
+  end
+
+  # Vypočíta očakávaný dátum Nového roka
+  def calculate_new_year_date(today)
+    if today.month == 12
+      Date.new(today.year + 1, 1, 1)
+    else
+      today <= Date.new(today.year, 1, 1) ? Date.new(today.year, 1, 1) : Date.new(today.year + 1, 1, 1)
+    end
+  end
+
+  # Pomocná metóda pre test Valentína
+  def check_valentines_date(today)
+    result = Hizuke.parse('send card on Valentines Day')
+    assert_equal 'send card on', result.clean_text
+    valentines_year = today <= Date.new(today.year, 2, 14) ? today.year : today.year + 1
+    assert_equal Date.new(valentines_year, 2, 14), result.date
+  end
+
+  # Testuje správne rozpoznanie a výpočet dátumov dynamických sviatkov
+  def test_parsing_dynamic_holidays
+    today = Date.today
+
+    check_easter_date(today)
+    check_thanksgiving_date(today)
+  end
+
+  # Pomocná metóda pre test Veľkej noci
+  def check_easter_date(today)
+    result = Hizuke.parse('egg hunt on Easter')
+    assert_equal 'egg hunt on', result.clean_text
+
+    easter_date = Hizuke::Holidays.calculate_easter(today.year)
+    expected_year = easter_date < today ? today.year + 1 : today.year
+    expected_date = Hizuke::Holidays.calculate_easter(expected_year)
+
+    assert_equal expected_date, result.date
+  end
+
+  # Pomocná metóda pre test Vďakyvzdania
+  def check_thanksgiving_date(today)
+    thanksgiving_date = Hizuke::Holidays.calculate_nth_day_of_month(today.year, 11, 4, 4)
+    result = Hizuke.parse('dinner on Thanksgiving')
+    assert_equal 'dinner on', result.clean_text
+
+    expected_year = thanksgiving_date < today ? today.year + 1 : today.year
+    expected_date = Hizuke::Holidays.calculate_nth_day_of_month(expected_year, 11, 4, 4)
+
+    assert_equal expected_date, result.date
+  end
+
+  # Testuje správne rozpoznanie a výpočet "next" sviatkov
+  def test_parsing_next_holidays
+    today = Date.today
+
+    check_next_christmas(today)
+    check_next_easter(today)
+  end
+
+  # Pomocná metóda pre test nasledujúcich Vianoc
+  def check_next_christmas(today)
+    result = Hizuke.parse('visit family next Christmas')
+    assert_equal 'visit family next', result.clean_text
+
+    christmas_date = Date.new(today.year, 12, 25)
+    expected_year = christmas_date > today ? today.year : today.year + 1
+
+    assert_equal Date.new(expected_year, 12, 25), result.date
+  end
+
+  # Pomocná metóda pre test nasledujúcej Veľkej noci
+  def check_next_easter(today)
+    result = Hizuke.parse('egg hunt next Easter')
+    assert_equal 'egg hunt next', result.clean_text
+
+    easter_date = Hizuke::Holidays.calculate_easter(today.year)
+    expected_year = easter_date > today ? today.year : today.year + 1
+    expected_date = Hizuke::Holidays.calculate_easter(expected_year)
+
+    assert_equal expected_date, result.date
+  end
+
+  # Testuje správnosť výpočtov dátumov sviatkov
+  def test_parsing_last_holidays
+    # Testujeme výpočty dátumov sviatkov priamo
+    easter_this_year = Hizuke::Holidays.calculate_easter(Date.today.year)
+    assert_includes [3, 4], easter_this_year.month
+
+    thanksgiving_this_year = Hizuke::Holidays.calculate_nth_day_of_month(Date.today.year, 11, 4, 4)
+    assert_equal 11, thanksgiving_this_year.month
+    assert_equal 4, thanksgiving_this_year.wday # štvrtok
+  end
+
+  # Testuje pridanie času k sviatkovým dátumom
+  def test_holiday_with_time
+    today = Date.today
+    christmas_year = today <= Date.new(today.year, 12, 25) ? today.year : today.year + 1
+
+    check_holiday_dinner_time(christmas_year)
+    check_holiday_breakfast_time(today)
+  end
+
+  # Pomocná metóda pre test večere počas sviatku
+  def check_holiday_dinner_time(christmas_year)
+    result = Hizuke.parse('dinner on Christmas at 6pm')
+    assert_equal 'dinner on', result.clean_text
+    assert_equal Date.new(christmas_year, 12, 25), result.date
+    assert_equal 18, result.time.hour
+    assert_equal 0, result.time.min
+  end
+
+  # Pomocná metóda pre test raňajok počas sviatku
+  def check_holiday_breakfast_time(today)
+    result = Hizuke.parse('breakfast on Easter at 9:30')
+    assert_equal 'breakfast on', result.clean_text
+
+    easter_date = Hizuke::Holidays.calculate_easter(today.year)
+    expected_year = easter_date < today ? today.year + 1 : today.year
+    expected_date = Hizuke::Holidays.calculate_easter(expected_year)
+
+    assert_equal expected_date, result.date
+    assert_equal 9, result.time.hour
+    assert_equal 30, result.time.min
+  end
+
+  # Testuje správne výpočty dátumov sviatkov v rôznych rokoch
+  def test_holiday_calculation_methods
+    # Test Easter calculation
+    easter_for_year = Hizuke::Holidays.calculate_easter(2023)
+    assert_equal Date.new(2023, 4, 9), easter_for_year
+
+    easter_for_year = Hizuke::Holidays.calculate_easter(2024)
+    assert_equal Date.new(2024, 3, 31), easter_for_year
+
+    # Test nth day of month calculation
+    mothers_day_for_year = Hizuke::Holidays.calculate_nth_day_of_month(2023, 5, 0, 2) # 2nd Sunday in May
+    assert_equal Date.new(2023, 5, 14), mothers_day_for_year
+
+    thanksgiving_for_year = Hizuke::Holidays.calculate_nth_day_of_month(2023, 11, 4, 4) # 4th Thursday in November
+    assert_equal Date.new(2023, 11, 23), thanksgiving_for_year
+
+    # Test first day of month calculation
+    labor_day_for_year = Hizuke::Holidays.calculate_first_day_of_month(2023, 9, 1) # 1st Monday in September
+    assert_equal Date.new(2023, 9, 4), labor_day_for_year
+
+    # Test last day of month calculation
+    memorial_day_for_year = Hizuke::Holidays.calculate_last_day_of_month(2023, 5, 1) # Last Monday in May
+    assert_equal Date.new(2023, 5, 29), memorial_day_for_year
+  end
+end

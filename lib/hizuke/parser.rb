@@ -2,6 +2,8 @@
 
 require_relative 'constants'
 require_relative 'date_calculator'
+require_relative 'holidays'
+require_relative 'holiday_matcher'
 require_relative 'pattern_matcher'
 require 'date'
 
@@ -51,6 +53,13 @@ module Hizuke
   class ParseError < StandardError; end
 
   # Main parser class for the Hizuke library
+  # Supports parsing dates from text with references like:
+  # - today, tomorrow, yesterday
+  # - next Monday, this Tuesday, last Friday
+  # - in 3 days, 2 weeks ago
+  # - next week, last month, end of year
+  # - holidays like Christmas, Easter, Thanksgiving
+  # - at 10:30, noon, midnight
   class Parser
     include Constants
     include DateCalculator
@@ -59,6 +68,7 @@ module Hizuke
     include YearCalculator
     include QuarterCalculator
     include PeriodCalculator
+    include HolidayMatcher
     include PatternMatcher
 
     # Parse a date from text - class method

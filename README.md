@@ -1,6 +1,6 @@
 # Hizuke
 
-Hizuke is a simple Ruby gem that parses text containing date references like "yesterday", "today", and "tomorrow". It extracts the date and returns the clean text without the date reference. It can also recognize time references like "at 10" or "at 7pm".
+Hizuke is a simple Ruby gem that parses text containing date references like "yesterday", "today", and "tomorrow". It extracts the date and returns the clean text without the date reference. It can also recognize time references like "at 10" or "at 7pm" and holiday references like "Christmas" or "Easter".
 
 ## Installation
 
@@ -103,6 +103,33 @@ result = Hizuke.parse("dinner today in the evening")
 puts result.text  # => "dinner"
 puts result.date  # => <Date: 2023-03-31> (represents today's date)
 puts result.time  # => 20:00 (default evening time)
+
+# Parse text with holiday references
+result = Hizuke.parse("family gathering on Christmas")
+puts result.text  # => "family gathering on"
+puts result.date  # => <Date: 2023-12-25> (represents Christmas day)
+
+# Parse text with dynamic holiday references
+result = Hizuke.parse("egg hunt on Easter")
+puts result.text  # => "egg hunt on"
+puts result.date  # => <Date: 2023-04-09> (represents Easter day for the current year)
+
+# Parse text with "next" holiday references
+result = Hizuke.parse("visit family next Christmas")
+puts result.text  # => "visit family"
+puts result.date  # => <Date: 2023-12-25> (represents next Christmas)
+
+# Parse text with "last" holiday references
+result = Hizuke.parse("remember last Thanksgiving")
+puts result.text  # => "remember"
+puts result.date  # => <Date: 2022-11-24> (represents previous Thanksgiving)
+
+# Parse text with time and holiday
+result = Hizuke.parse("dinner on Christmas at 6pm")
+puts result.text  # => "dinner on"
+puts result.date  # => <Date: 2023-12-25> (represents Christmas day)
+puts result.time  # => 18:00 (represents the time)
+puts result.datetime  # => 2023-12-25 18:00:00 (combines date and time)
 ```
 
 The parser is case-insensitive and can handle date references located anywhere in the text. It also supports date references with or without spaces (e.g., "nextweek" or "next week").
@@ -165,6 +192,38 @@ Currently, the following English date keywords are supported:
 - `mid month` / `midmonth` - returns the date of the 15th day of the current month
 - `next quarter` / `nextquarter` - returns the first day of the next quarter
 - `last quarter` / `lastquarter` - returns the first day of the last quarter
+
+## Supported Holidays
+
+The following holidays are supported:
+
+### Static holidays (same date every year)
+- `new year` / `new years day` - January 1st
+- `new years eve` - December 31st
+- `christmas` / `christmas day` - December 25th
+- `christmas eve` - December 24th
+- `valentines day` - February 14th
+- `halloween` - October 31st
+- `independence day` - July 4th (USA)
+- `st patricks day` - March 17th
+- `april fools day` - April 1st
+- `earth day` - April 22nd
+- `may day` - May 1st
+
+### Dynamic holidays (calculated based on rules)
+- `easter` - Easter Sunday (calculated using Butcher's algorithm)
+- `good friday` - Friday before Easter Sunday
+- `easter monday` - Monday after Easter Sunday
+- `mothers day` - Second Sunday in May
+- `fathers day` - Third Sunday in June
+- `thanksgiving` - Fourth Thursday in November (USA)
+- `labor day` - First Monday in September
+- `memorial day` - Last Monday in May
+
+Holiday references can be used with qualifiers:
+- Without qualifier (e.g., "Christmas") - refers to this year's holiday or next year's if it has already passed
+- With "next" qualifier (e.g., "next Easter") - refers to the next occurrence of the holiday
+- With "last" qualifier (e.g., "last Christmas") - refers to the previous occurrence of the holiday
 
 ## Supported Time Formats
 

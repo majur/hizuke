@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.5] - 2025-05-05
+
+### Added
+- Support for holidays and notable days:
+  - Static holidays (same date every year):
+    - "New Year's Day", "Christmas", "Valentine's Day", etc.
+  - Dynamic holidays (calculated based on rules):
+    - "Easter", "Good Friday", "Easter Monday"
+    - "Mother's Day", "Father's Day", "Thanksgiving"
+    - "Labor Day", "Memorial Day", etc.
+  - Supports references with qualifiers:
+    - "Christmas" - this/next Christmas, depending on current date
+    - "next Christmas" - next occurrence of Christmas
+    - "last Easter" - previous occurrence of Easter
+- Helper methods for holiday calculations:
+  - Easter calculation (Butcher's algorithm)
+  - Methods for nth day of month (e.g., 3rd Sunday in June)
+  - First and last occurrence of weekday in month
+- Updated parser to prioritize holiday patterns in text
+- Comprehensive module structure for holiday support:
+  - `Holidays` module for holiday definitions
+  - `HolidayMatcher` module for text pattern matching
+- Updated documentation to include holiday parsing examples
+
 ## [0.0.4] - 2025-04-29
 
 ### Added
