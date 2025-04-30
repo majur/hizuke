@@ -1,111 +1,105 @@
 # frozen_string_literal: true
 
-require 'date'
-require 'time'
 require_relative 'constants'
 require_relative 'date_calculator'
 require_relative 'pattern_matcher'
+require 'date'
 
-# Main module for Hizuke date extraction library
 module Hizuke
-  # Simple class to represent a time of day without a date
+  # TimeOfDay represents a time with hour, minute and second
   class TimeOfDay
     attr_reader :hour, :min, :sec
 
-    def initialize(hour, min = 0, sec = 0)
+    def initialize(hour, min, sec)
       @hour = hour
       @min = min
       @sec = sec
     end
 
     def to_s
+      # Include seconds in the format if they are not zero
       if sec.zero?
         format('%<hour>02d:%<min>02d', hour: hour, min: min)
       else
         format('%<hour>02d:%<min>02d:%<sec>02d', hour: hour, min: min, sec: sec)
       end
     end
-
-    def inspect
-      to_s
-    end
   end
 
-  # Result object containing the clean text and extracted date/time
+  # Result represents a parsing result with clean text and parsed date
   class Result
-    attr_reader :text, :date, :time
+    attr_reader :clean_text, :date, :time
 
-    def initialize(text, date, time = nil)
-      @text = text
+    def initialize(clean_text, date, time = nil)
+      @clean_text = clean_text
       @date = date
       @time = time
     end
 
+    # Alias for clean_text for backward compatibility
+    alias text clean_text
+
+    # Returns a DateTime object if time is available, otherwise nil
     def datetime
-      return nil unless @time
+      return nil unless @time && @date
 
-      # Combine date and time into a Time object
-      Time.new(@date.year, @date.month, @date.day,
-               @time.hour, @time.min, @time.sec)
+      DateTime.new(@date.year, @date.month, @date.day, @time.hour, @time.min, @time.sec)
     end
-  end
-
-  # Configuration class for Hizuke
-  class Configuration
-    attr_accessor :morning_time, :evening_time
-
-    def initialize
-      @morning_time = { hour: 8, min: 0 }
-      @evening_time = { hour: 20, min: 0 }
-    end
-  end
-
-  # Allows configuration of Hizuke
-  def self.configure
-    @configuration ||= Configuration.new
-    yield(@configuration) if block_given?
-  end
-
-  # Returns the configuration
-  def self.configuration
-    @configuration ||= Configuration.new
   end
 
   # Error raised when parsing fails
   class ParseError < StandardError; end
 
-  # Parser class responsible for extracting dates from text
+  # Main parser class for the Hizuke library
   class Parser
+    include Constants
     include DateCalculator
+    include WeekCalculator
+    include MonthCalculator
+    include YearCalculator
+    include QuarterCalculator
+    include PeriodCalculator
     include PatternMatcher
 
-    # Parse text containing time references and extract both
-    # the clean text and the date.
-    #
+    # Parse a date from text - class method
     # @param text [String] the text to parse
-    # @return [Hizuke::Result] the parsing result containing text and date
-    # @raise [Hizuke::ParseError] if no valid date reference is found
+    # @return [Hizuke::Result] the parsing result with clean text and date
     def self.parse(text)
       new.parse(text)
     end
 
-    # Instance method to parse text
-    #
+    # Parse a date with result details from text - class method
     # @param text [String] the text to parse
-    # @return [Hizuke::Result] the parsing result containing text and date
-    # @raise [Hizuke::ParseError] if no valid date reference is found
+    # @return [Hizuke::Result] the parsing result with clean text and date
+    def self.parse_with_result(text)
+      new.parse_with_result(text)
+    end
+
+    # Parse a date from text
+    # @param text [String] the text to parse
+    # @return [Hizuke::Result] the parsing result with clean text and date
     def parse(text)
-      # Check if text is nil or empty
-      raise ParseError, 'Input text cannot be nil or empty' if text.nil? || text.empty?
+      raise ParseError, 'Cannot parse nil input' if text.nil?
+      raise ParseError, 'Cannot parse empty input' if text.empty?
 
-      # Extract time if present
-      extracted_time, clean_text = extract_time_references(text)
+      parse_with_result(text)
+    end
 
-      # Try different parsing strategies
+    # Parse a date with result details from text
+    # @param text [String] the text to parse
+    # @return [Hizuke::Result] the parsing result with clean text and date
+    def parse_with_result(text)
+      raise ParseError, 'Cannot parse nil input' if text.nil?
+      raise ParseError, 'Cannot parse empty input' if text.empty?
+
+      # Extract any time references
+      time, clean_text = extract_time_references(text)
+
+      # Try to parse a date from the cleaned text
       result = try_parsing_strategies(clean_text)
 
-      # Return result with the extracted time
-      Result.new(result.text, result.date, extracted_time)
+      # Add the time if extracted
+      Result.new(result.clean_text, result.date, time)
     end
   end
 end
