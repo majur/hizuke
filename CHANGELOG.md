@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2025-05-08
+
+### Added
+- Support for Christmas date parsing:
+  - "christmas" / "xmas" - returns December 25th of the current year
+  - "last christmas" / "lastchristmas" - returns December 25th of the previous year
+  - "next christmas" / "nextchristmas" - returns December 25th of the next year
+
+### Changed
+- Major refactoring of the entire codebase:
+  - Improved code organization and structure
+  - Better error handling and edge case management
+  - Cleaner API design for better developer experience
+
 ## [0.0.4] - 2025-04-29
 
 ### Added
