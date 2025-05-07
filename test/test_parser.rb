@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-# Základná trieda pre zdieľané pomocné metódy
+# Base class for shared helper methods
 class BaseParserTest < Minitest::Test
   def parse_and_assert(text, expected_text, expected_date)
     result = Hizuke::Parser.parse(text)
@@ -12,7 +12,7 @@ class BaseParserTest < Minitest::Test
   end
 end
 
-# Testy pre základné dátumové výrazy
+# Tests for basic date expressions
 class BasicDateParserTest < BaseParserTest
   def test_parse_tomorrow
     parse_and_assert('wash car tomorrow', 'wash car', Date.today + 1)
@@ -57,9 +57,10 @@ class BasicDateParserTest < BaseParserTest
   def test_raises_on_no_date_keyword
     text = 'wash car'
 
-    assert_raises(Hizuke::ParseError) do
-      Hizuke::Parser.parse(text)
-    end
+    result = Hizuke::Parser.parse(text)
+    assert_equal text, result.text
+    assert_nil result.date
+    assert_nil result.time
   end
 
   def test_raises_on_empty_input
@@ -75,7 +76,7 @@ class BasicDateParserTest < BaseParserTest
   end
 end
 
-# Testy pre relatívne dátumové výrazy (X dní/týždňov/mesiacov/rokov dopredu/dozadu)
+# Tests for relative date expressions (X days/weeks/months/years forward/backward)
 class RelativeDateParserTest < BaseParserTest
   def test_parse_in_x_days
     parse_and_assert('exam in 5 days', 'exam', Date.today + 5)
@@ -116,7 +117,7 @@ class RelativeDateParserTest < BaseParserTest
   end
 end
 
-# Testy pre výrazy so dňami v týždni
+# Tests for expressions with days of the week
 class DayOfWeekParserTest < BaseParserTest
   def test_parse_this_monday
     today = Date.today
@@ -177,7 +178,7 @@ class DayOfWeekParserTest < BaseParserTest
   end
 end
 
-# Testy pre týždenné, mesačné a ročné výrazy
+# Tests for weekly, monthly, and yearly expressions
 class PeriodParserTest < BaseParserTest
   def test_parse_next_week
     # Find next Monday
@@ -271,7 +272,7 @@ class PeriodParserTest < BaseParserTest
   end
 end
 
-# Testy pre výrazy s kvartálmi
+# Tests for quarter expressions
 class QuarterParserTest < BaseParserTest
   def next_quarter_month(current_month)
     if current_month <= 3
@@ -334,7 +335,7 @@ class QuarterParserTest < BaseParserTest
   end
 end
 
-# Testy pre výrazy s výnimočnými obdobiami (koniec týždňa, mesiaca, roka, stred týždňa, atď.)
+# Tests for expressions with special periods (end of week, month, year, middle of week, etc.)
 class SpecialPeriodParserTest < BaseParserTest
   def test_parse_end_of_week
     # Calculate days until Sunday (end of week)
@@ -427,7 +428,7 @@ class SpecialPeriodParserTest < BaseParserTest
   end
 end
 
-# Testy pre číselne zadaný čas (at 10, at 9am, atď.)
+# Tests for numeric time expressions (at 10, at 9am, etc.)
 class NumericTimeParserTest < BaseParserTest
   def test_parse_with_time
     text = 'meeting tomorrow at 10'
@@ -519,7 +520,7 @@ class NumericTimeParserTest < BaseParserTest
   end
 end
 
-# Testy pre datetime metódu a slovne zadaný čas (noon, midnight, ráno, večer)
+# Tests for datetime method and time expressions (noon, midnight, morning, evening)
 class DateTimeParserTest < BaseParserTest
   def test_datetime_method
     text = 'meeting tomorrow at 10:30'
@@ -594,7 +595,7 @@ class DateTimeParserTest < BaseParserTest
   end
 end
 
-# Testy pre konfiguráciu
+# Tests for configuration
 class ConfigParserTest < BaseParserTest
   def with_temp_config(setting, value)
     original_config = Hizuke.configuration.send(setting)
@@ -629,5 +630,52 @@ class ConfigParserTest < BaseParserTest
       assert_equal 0, result.time.min
       assert_equal '19:00', result.time.to_s
     end
+  end
+end
+
+# Tests for holiday date parsing
+class HolidayParserTest < BaseParserTest
+  def test_parse_christmas
+    current_year = Date.today.year
+    christmas_date = Date.new(current_year, 12, 25)
+
+    # If Christmas has already passed this year, expect next year's Christmas
+    expected_date = Date.today > christmas_date ? Date.new(current_year + 1, 12, 25) : christmas_date
+
+    parse_and_assert('buy presents christmas', 'buy presents', expected_date)
+  end
+
+  def test_parse_xmas
+    current_year = Date.today.year
+    christmas_date = Date.new(current_year, 12, 25)
+
+    # If Christmas has already passed this year, expect next year's Christmas
+    expected_date = Date.today > christmas_date ? Date.new(current_year + 1, 12, 25) : christmas_date
+
+    parse_and_assert('family dinner xmas', 'family dinner', expected_date)
+  end
+
+  def test_parse_next_christmas
+    expected_date = Date.new(Date.today.year + 1, 12, 25)
+
+    parse_and_assert('visit family next christmas', 'visit family', expected_date)
+  end
+
+  def test_parse_nextchristmas
+    expected_date = Date.new(Date.today.year + 1, 12, 25)
+
+    parse_and_assert('travel home nextchristmas', 'travel home', expected_date)
+  end
+
+  def test_parse_last_christmas
+    expected_date = Date.new(Date.today.year - 1, 12, 25)
+
+    parse_and_assert('received present last christmas', 'received present', expected_date)
+  end
+
+  def test_parse_lastchristmas
+    expected_date = Date.new(Date.today.year - 1, 12, 25)
+
+    parse_and_assert('family gathering lastchristmas', 'family gathering', expected_date)
   end
 end

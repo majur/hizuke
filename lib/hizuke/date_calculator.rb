@@ -96,10 +96,22 @@ module Hizuke
       }
     end
 
+    # Return mapping for holiday related date keywords
+    # @return [Hash] Mapping of keywords to method names
+    def holiday_methods
+      {
+        christmas: :calculate_holiday_date,
+        next_christmas: :calculate_holiday_date,
+        last_christmas: :calculate_holiday_date
+      }
+    end
+
     # Maps date value symbols to calculation methods
     # @return [Hash] the mapping of symbols to method names
     def date_calculation_methods
-      temporal_period_methods.merge(yearly_period_methods).merge(special_period_methods)
+      temporal_period_methods.merge(yearly_period_methods)
+                             .merge(special_period_methods)
+                             .merge(holiday_methods)
     end
 
     # Calculate the date based on the keyword value
@@ -388,6 +400,51 @@ module Hizuke
     end
   end
 
+  # Module for holiday-related date calculations
+  module HolidayCalculator
+    # Calculate holiday-related dates
+    # @param date_value [Symbol] the date keyword (:christmas, :next_christmas, or :last_christmas)
+    # @return [Date] the calculated date
+    def calculate_holiday_date(date_value)
+      case date_value
+      when :christmas
+        calculate_christmas_date
+      when :next_christmas
+        calculate_next_christmas_date
+      when :last_christmas
+        calculate_last_christmas_date
+      end
+    end
+
+    # Calculate this year's Christmas date (December 25)
+    # @return [Date] the date for Christmas this year
+    def calculate_christmas_date
+      current_year = Date.today.year
+      christmas_date = Date.new(current_year, 12, 25)
+
+      # If Christmas has already passed this year, return next year's Christmas
+      if Date.today > christmas_date
+        Date.new(current_year + 1, 12, 25)
+      else
+        christmas_date
+      end
+    end
+
+    # Calculate next year's Christmas date (December 25 of next year)
+    # @return [Date] the date for Christmas next year
+    def calculate_next_christmas_date
+      current_year = Date.today.year
+      Date.new(current_year + 1, 12, 25)
+    end
+
+    # Calculate last year's Christmas date (December 25 of previous year)
+    # @return [Date] the date for Christmas last year
+    def calculate_last_christmas_date
+      current_year = Date.today.year
+      Date.new(current_year - 1, 12, 25)
+    end
+  end
+
   # Main module for date calculations
   module DateCalculator
     include BaseCalculator
@@ -396,5 +453,6 @@ module Hizuke
     include YearCalculator
     include QuarterCalculator
     include PeriodCalculator
+    include HolidayCalculator
   end
 end
