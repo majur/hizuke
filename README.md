@@ -165,6 +165,9 @@ Currently, the following English date keywords are supported:
 - `mid month` / `midmonth` - returns the date of the 15th day of the current month
 - `next quarter` / `nextquarter` - returns the first day of the next quarter
 - `last quarter` / `lastquarter` - returns the first day of the last quarter
+- `christmas` / `xmas` - returns the date of Christmas (December 25th) of the current year (or next year if Christmas has already passed)
+- `next christmas` / `nextchristmas` - returns the date of Christmas (December 25th) of the next year
+- `last christmas` / `lastchristmas` - returns the date of Christmas (December 25th) of the previous year
 
 ## Supported Time Formats
 

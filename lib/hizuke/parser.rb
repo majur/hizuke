@@ -6,7 +6,7 @@ require_relative 'pattern_matcher'
 require 'date'
 
 module Hizuke
-  # TimeOfDay represents a time with hour, minute and second
+  # Time of day representation with hour, minute and second
   class TimeOfDay
     attr_reader :hour, :min, :sec
 
@@ -92,14 +92,18 @@ module Hizuke
       raise ParseError, 'Cannot parse nil input' if text.nil?
       raise ParseError, 'Cannot parse empty input' if text.empty?
 
-      # Extract any time references
-      time, clean_text = extract_time_references(text)
+      # First we'll try to find a date
+      result = try_parsing_strategies(text)
 
-      # Try to parse a date from the cleaned text
-      result = try_parsing_strategies(clean_text)
-
-      # Add the time if extracted
-      Result.new(result.clean_text, result.date, time)
+      if result
+        # If we found a date, extract time references
+        time, clean_text = extract_time_references(result.clean_text)
+        Result.new(clean_text, result.date, time)
+      else
+        # If we didn't find a date, extract only time references
+        time, clean_text = extract_time_references(text)
+        Result.new(clean_text, nil, time)
+      end
     end
   end
 end

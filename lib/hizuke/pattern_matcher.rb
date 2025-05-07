@@ -360,7 +360,7 @@ module Hizuke
 
     # Try different parsing strategies to find a date reference
     # @param clean_text [String] the text without time references
-    # @return [Hizuke::Result] the parsing result
+    # @return [Hizuke::Result, nil] the parsing result or nil if no date reference is found
     def try_parsing_strategies(clean_text)
       # Check for dynamic patterns first (in X days, X days ago)
       result = check_dynamic_patterns(clean_text)
@@ -375,7 +375,11 @@ module Hizuke
       return result if result
 
       # Try to find single-word date references
-      check_single_word_date_references(clean_text)
+      result = check_single_word_date_references(clean_text)
+      return result if result
+
+      # If no date reference was found, return nil instead of today's date
+      nil
     end
 
     # Check for compound date expressions like "next week"
@@ -435,14 +439,16 @@ module Hizuke
 
     # Check for single-word date references
     # @param clean_text [String] the text to check
-    # @return [Hizuke::Result] the parsing result
-    # @raise [Hizuke::ParseError] if no valid date reference is found
+    # @return [Hizuke::Result, nil] the parsing result or nil if no keyword found
     def check_single_word_date_references(clean_text)
       # Split the text into words
       words = clean_text.split
 
       # Find the matching date keyword
       date_match = find_date_keyword_match(words)
+
+      # If no reference was found, return nil
+      return nil unless date_match
 
       # Calculate the date based on the keyword
       date = calculate_date(date_match[:value])
@@ -455,8 +461,7 @@ module Hizuke
 
     # Find a date keyword match in the words
     # @param words [Array<String>] the words to check
-    # @return [Hash] a hash with the index and value of the match
-    # @raise [Hizuke::ParseError] if no valid date reference is found
+    # @return [Hash, nil] a hash with the index and value of the match or nil if no match
     def find_date_keyword_match(words)
       words.each_with_index do |word, index|
         clean_word = word.downcase.gsub(/[^a-z]/, '')
@@ -465,7 +470,7 @@ module Hizuke
         return { index: index, value: DATE_KEYWORDS[clean_word] }
       end
 
-      raise ParseError, "No valid date reference found in '#{words.join(' ')}'"
+      nil
     end
 
     # Remove the date keyword from the text

@@ -50,7 +50,13 @@ module Hizuke
       'midweek' => :mid_week,
       'mid week' => :mid_week,
       'midmonth' => :mid_month,
-      'mid month' => :mid_month
+      'mid month' => :mid_month,
+      'christmas' => :christmas,
+      'xmas' => :christmas,
+      'nextchristmas' => :next_christmas,
+      'next christmas' => :next_christmas,
+      'lastchristmas' => :last_christmas,
+      'last christmas' => :last_christmas
     }.freeze
 
     # Regex patterns for dynamic date references
